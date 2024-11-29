@@ -1,6 +1,13 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from .config import Config
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 def create_app():
     """
@@ -19,7 +26,10 @@ def create_app():
     # Default route for health check
     @app.route("/", methods=["GET"])
     def home():
-        return jsonify({"status": "active", "message": "Zoho SalesIQ Chatbot is running"}), 200
+        return jsonify({
+            "status": "active",
+            "message": "Zoho SalesIQ Chatbot is running"
+        }), 200
     
     # Error handlers
     @app.errorhandler(404)

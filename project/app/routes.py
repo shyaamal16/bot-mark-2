@@ -1,5 +1,8 @@
 from flask import Blueprint, request, jsonify, current_app
 from .utils import ChatManager
+import logging
+
+logger = logging.getLogger(__name__)
 
 webhook_bp = Blueprint('webhook', __name__)
 
@@ -7,12 +10,19 @@ webhook_bp = Blueprint('webhook', __name__)
 def handle_webhook():
     try:
         data = request.json
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No data received'
+            }), 400
+
         chat_manager = ChatManager()
         
         # Extract message from Zoho SalesIQ payload
-        message = data.get('message', {}).get('content', '')
+        message_data = data.get('message', {})
         visitor = data.get('visitor', {})
         
+        message = message_data.get('content', '')
         user_data = {
             'visitor_id': visitor.get('id'),
             'name': visitor.get('name'),
@@ -22,13 +32,18 @@ def handle_webhook():
         # Process message and generate response
         response = chat_manager.handle_message(message, user_data)
         
+        # Format response for Zoho SalesIQ
         return jsonify({
             'status': 'success',
-            'response': response
+            'response': {
+                'message': response,
+                'type': 'text'
+            }
         }), 200
         
     except Exception as e:
+        logger.error(f"Error in webhook handler: {e}")
         return jsonify({
             'status': 'error',
-            'message': str(e)
+            'message': 'Internal server error'
         }), 500

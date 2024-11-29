@@ -1,3 +1,5 @@
+from .intent_recognition import IntentRecognizer
+from .response_generator import ResponseGenerator
 from transformers import pipeline
 import logging
 
@@ -7,34 +9,34 @@ class ChatManager:
     def __init__(self):
         try:
             self.sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+            self.intent_recognizer = IntentRecognizer()
+            self.response_generator = ResponseGenerator()
         except Exception as e:
-            logger.error(f"Error initializing sentiment analyzer: {e}")
-            self.sentiment_analyzer = None
+            logger.error(f"Error initializing chat manager: {e}")
+            raise
 
     def handle_message(self, message, user_data):
         try:
-            # Analyze sentiment if analyzer is available
-            sentiment = None
-            if self.sentiment_analyzer:
-                sentiment = self.sentiment_analyzer(message)[0]
-            
-            # Basic response logic
-            response = self.generate_response(message, sentiment)
+            if not message:
+                return "I didn't receive any message. How can I help you?"
+
+            # Log incoming message
+            logger.info(f"Received message from {user_data.get('visitor_id')}: {message}")
+
+            # Analyze sentiment
+            sentiment = self.sentiment_analyzer(message)[0]
+            logger.info(f"Sentiment analysis: {sentiment}")
+
+            # Recognize intent
+            intent = self.intent_recognizer.recognize_intent(message)
+            logger.info(f"Recognized intent: {intent}")
+
+            # Generate response
+            response = self.response_generator.generate_response(intent, message)
+            logger.info(f"Generated response: {response}")
+
             return response
-            
+
         except Exception as e:
             logger.error(f"Error processing message: {e}")
             return "I apologize, but I'm having trouble processing your request. Please try again."
-
-    def generate_response(self, message, sentiment=None):
-        # Simple response logic - can be enhanced based on requirements
-        message = message.lower()
-        
-        if "hello" in message or "hi" in message:
-            return "Hello! How can I assist you today?"
-        elif "help" in message:
-            return "I'm here to help! Please let me know what you need assistance with."
-        elif "bye" in message:
-            return "Goodbye! Have a great day!"
-        else:
-            return "I understand your message. How can I help you further?"
