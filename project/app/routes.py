@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify, current_app
-from .utils import ChatManager
+"""Routes module"""
+from flask import Blueprint, request, jsonify
+from .chat_manager import ChatManager
 import logging
 
 logger = logging.getLogger(__name__)
